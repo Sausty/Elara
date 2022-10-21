@@ -5,10 +5,13 @@
 ** Win32 entry point and platform layer for Elara
 */
 
-#include <stdio.h>
-#include <Windows.h>
+#include "elara_common.h"
+
+#if defined(ELARA_PLATFORM_WINDOWS)
 
 int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLine, int ShowCommand)
 {
     return (0);
 }
+
+#endif
