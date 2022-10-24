@@ -130,8 +130,8 @@ int main(void)
             }
         }
     }
-
     ExitPlatform();
+    return (0);
 }
 
 #endif

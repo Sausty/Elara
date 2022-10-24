@@ -1,0 +1,37 @@
+version(1);
+project_name = "Elara";
+
+patterns = {
+	"*.c",
+	"*.h",
+	"*.glsl"
+	"*.4coder"
+};
+
+load_paths_custom = {
+	{"."}
+};
+
+load_paths = {
+	{ load_paths_custom, .os = "win" },
+	{ load_paths_custom, .os = "linux" }
+};
+
+build = "make";
+run = "make run";
+
+command_list = {
+	{
+		.name = "build",
+		.out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = true,
+		.cmd = { {build, .os = "win"}, {build, .os = "linux"} }
+	},
+	{
+		.name = "run",
+		.out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = true,
+		.cmd = { {run, .os = "win"}, {run, .os = "linux"} }
+	}
+};
+
+fkey_command[1] = "build";
+fkey_command[5] = "run";
