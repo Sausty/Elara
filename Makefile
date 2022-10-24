@@ -13,7 +13,7 @@ ifeq ($(OS),Windows_NT)
 	LIBS = -lkernel32 -luser32
 	EXTENSION = .exe
 else
-	LIBS = -lX11 -lm -lX11-xcb -L/usr/X11R6/lib
+	LIBS = -lX11 -lm -lX11-xcb -lxcb -L/usr/X11R6/lib
 endif
 
 all: build

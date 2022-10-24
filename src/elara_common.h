@@ -1,12 +1,12 @@
 /*
 ** EPITECH PROJECT, 2022
-** elara_common.c
+** elara_common.h
 ** File description:
 ** File included by every source file in Elara.
 */
 
 #ifndef ELARA_COMMON_H_
-#define ELARA_COMMON_H
+#define ELARA_COMMON_H_
 
 #include <stdint.h>
 #include <stdlib.h>
