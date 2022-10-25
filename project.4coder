@@ -4,7 +4,7 @@ project_name = "Elara";
 patterns = {
 	"*.c",
 	"*.h",
-	"*.glsl"
+	"*.glsl",
 	"*.4coder"
 };
 

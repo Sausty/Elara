@@ -10,10 +10,10 @@ SRC     = *.c
 INCLUDE = -I$(VULKAN_SDK)/Include
 
 ifeq ($(OS),Windows_NT)
-	LIBS = -lkernel32 -luser32
+	LIBS = -L$(VULKAN_SDK)/Lib -lkernel32 -luser32 -lvulkan-1
 	EXTENSION = .exe
 else
-	LIBS = -lX11 -lm -lX11-xcb -lxcb -L/usr/X11R6/lib
+	LIBS = -L$(VULKAN_SDK)/Lib -L/usr/X11R6/lib -lX11 -lm -lX11-xcb -lxcb -lvulkan-1
 endif
 
 all: build

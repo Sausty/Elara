@@ -7,10 +7,13 @@
 
 #include "elara_common.h"
 #include "elara_platform.h"
+#include "elara_vulkan.h"
 
 #if defined(ELARA_PLATFORM_WINDOWS)
 
 #include <stdio.h>
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_win32.h>
 
 typedef struct win32_state {
     HINSTANCE Instance;
@@ -74,10 +77,22 @@ void ExitPlatform()
     UnregisterClassA("ElaraClass", WinState.Instance);
 }
 
+void PlatformCreateSurface(VkInstance Instance, VkSurfaceKHR* Surface)
+{
+    VkWin32SurfaceCreateInfoKHR SurfaceCreateInfo = {0};
+    SurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+    SurfaceCreateInfo.hinstance = WinState.Instance;
+    SurfaceCreateInfo.hwnd = WinState.Window;
+    
+    VkResult Result = vkCreateWin32SurfaceKHR(Instance, &SurfaceCreateInfo, NULL, Surface);
+    CheckVk(Result, "Failed to create Win32 surface!");
+}
+
 int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLine, int ShowCommand)
 {
     WinState.Instance = Instance;
     InitPlatform();
+    InitVulkan();
 	
     while (!PlatformState.Quit)
     {
@@ -89,6 +104,7 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
         }
     }
     
+    ExitVulkan();
     ExitPlatform();
     return (0);
 }
