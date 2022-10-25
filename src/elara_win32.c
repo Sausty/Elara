@@ -38,8 +38,19 @@ LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM WParam, LPARAM LPa
     return DefWindowProc(Window, Message, WParam, LParam);
 }
 
+void RefreshDimensions()
+{
+    RECT Rect;
+    GetClientRect(WinState.Window, &Rect);
+    PlatformState.Dimensions.Width = Rect.right - Rect.left;
+    PlatformState.Dimensions.Height = Rect.bottom - Rect.top;
+}
+
 void InitPlatform()
 {
+    PlatformState.Dimensions.Width = 1280;
+    PlatformState.Dimensions.Height = 720;
+    
     WinState.WindowClass.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
     WinState.WindowClass.hInstance = WinState.Instance;
     WinState.WindowClass.lpfnWndProc = WindowProc;
@@ -57,8 +68,8 @@ void InitPlatform()
                                      WS_OVERLAPPEDWINDOW | WS_VISIBLE,
                                      CW_USEDEFAULT,
                                      CW_USEDEFAULT,
-                                     CW_USEDEFAULT,
-                                     CW_USEDEFAULT,
+                                     1280,
+                                     720,
                                      0,
                                      0,
                                      WinState.Instance,
@@ -69,6 +80,8 @@ void InitPlatform()
         return;
     }
     SetWindowLong(WinState.Window, GWL_STYLE, GetWindowLong(WinState.Window, GWL_STYLE) & ~WS_MINIMIZEBOX);
+    
+    RefreshDimensions();
 }
 
 void ExitPlatform()
@@ -96,6 +109,8 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
 	
     while (!PlatformState.Quit)
     {
+        RefreshDimensions();
+        
         MSG Message;
         while (PeekMessageA(&Message, WinState.Window, 0, 0, PM_REMOVE))
         {

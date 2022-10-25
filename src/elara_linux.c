@@ -28,8 +28,8 @@ platform_state PlatformState;
 
 void InitPlatform()
 {
-    PlatformState.WindowWidth = 1280;
-    PlatformState.WindowHeight = 720;
+    PlatformState.Dimensions.Width = 1280;
+    PlatformState.Dimensions.Height = 720;
     PlatformState.Quit = false;
 
     LinuxState.Display = XOpenDisplay(NULL);

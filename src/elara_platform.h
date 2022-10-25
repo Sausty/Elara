@@ -10,9 +10,13 @@
 
 #include "elara_common.h"
 
+typedef struct window_dimensions {
+    u32 Width;
+    u32 Height;
+} window_dimensions;
+
 typedef struct platform_state {
-    u32 WindowWidth;
-    u32 WindowHeight;
+    window_dimensions Dimensions;
     b8 Quit;
 } platform_state;
 

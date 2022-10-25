@@ -9,8 +9,11 @@
 #define ELARA_VULKAN_H
 
 #include "elara_common.h"
+#include "elara_platform.h"
 
 #include <vulkan/vulkan.h>
+
+#define FRAMES_IN_FLIGHT 3
 
 typedef struct vulkan_state {
     VkInstance Instance;
@@ -30,6 +33,12 @@ typedef struct vulkan_state {
     u32 DeviceExtensionCount;
     VkQueue GraphicsQueue;
     VkQueue ComputeQueue;
+    
+    VkSwapchainKHR Swapchain;
+    VkExtent2D SwapchainExtent;
+    VkFormat SwapchainFormat;
+    VkImage* SwapchainImages;
+    VkImageView SwapchainImageViews[FRAMES_IN_FLIGHT];
 } vulkan_state;
 
 extern vulkan_state VulkanState;
