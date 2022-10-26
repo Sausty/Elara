@@ -33,6 +33,14 @@ LRESULT CALLBACK WindowProc(HWND Window, UINT Message, WPARAM WParam, LPARAM LPa
         case WM_DESTROY:
         {
             PlatformState.Quit = true;
+            break;
+        }
+        case WM_SIZE:
+    	{
+            PlatformState.Dimensions.Width = LOWORD(LParam);
+            PlatformState.Dimensions.Height = HIWORD(LParam);
+            ResizeVulkan();
+            break;
         }
     }
     
@@ -110,8 +118,6 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
 	
     while (!PlatformState.Quit)
     {
-        RefreshDimensions();
-        
         MSG Message;
         while (PeekMessageA(&Message, WinState.Window, 0, 0, PM_REMOVE))
         {

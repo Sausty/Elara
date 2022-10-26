@@ -330,6 +330,7 @@ void ExitVulkan()
         vkDestroyFence(VulkanState.Device, VulkanState.SwapchainFences[Frame], NULL);
         vkDestroyImageView(VulkanState.Device, VulkanState.SwapchainImageViews[Frame], NULL);
     }
+    free(VulkanState.SwapchainImages);
     
     vkDestroySemaphore(VulkanState.Device, VulkanState.RenderedSemaphore, NULL);
     vkDestroySemaphore(VulkanState.Device, VulkanState.AvailableSemaphore, NULL);
@@ -339,6 +340,23 @@ void ExitVulkan()
     vkDestroyDevice(VulkanState.Device, NULL);
     vkDestroySurfaceKHR(VulkanState.Instance, VulkanState.Surface, NULL);
     vkDestroyInstance(VulkanState.Instance, NULL);
+}
+
+void ResizeVulkan()
+{
+    if (VulkanState.Swapchain != VK_NULL_HANDLE)
+    {   
+        vkDeviceWaitIdle(VulkanState.Device);
+        
+        for (u32 Frame = 0; Frame < FRAMES_IN_FLIGHT; Frame++) 
+        {
+            vkDestroyImageView(VulkanState.Device, VulkanState.SwapchainImageViews[Frame], NULL);
+        }
+        free(VulkanState.SwapchainImages);
+        vkDestroySwapchainKHR(VulkanState.Device, VulkanState.Swapchain, NULL);
+        
+        InitSwapchain();
+    }
 }
 
 void RenderBegin()

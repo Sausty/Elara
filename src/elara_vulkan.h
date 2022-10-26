@@ -13,7 +13,7 @@
 
 #include <vulkan/vulkan.h>
 
-#define FRAMES_IN_FLIGHT 3
+#define FRAMES_IN_FLIGHT 2
 #define COMMAND_BUFFER_GRAPHICS 0
 #define COMMAND_BUFFER_COMPUTE 1
 #define COMMAND_BUFFER_UPLOAD 2
@@ -71,6 +71,7 @@ extern vulkan_state VulkanState;
 void CheckVk(VkResult Result, const char* Message);
 void InitVulkan();
 void ExitVulkan();
+void ResizeVulkan();
 
 // Render control
 void RenderBegin();
