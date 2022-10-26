@@ -162,10 +162,15 @@ void InitDevice()
     for (int Extension = 0; Extension < ExtensionCount; Extension++)
     {
         VkExtensionProperties Property = ExtensionProperties[Extension];
-       
+        
         if (!strcmp(VK_KHR_SWAPCHAIN_EXTENSION_NAME, Property.extensionName)) 
         {
             VulkanState.DeviceExtensions[VulkanState.DeviceExtensionCount++] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+        }
+        
+        if (!strcmp("VK_EXT_mesh_shader", Property.extensionName))
+        {
+            VulkanState.DeviceExtensions[VulkanState.DeviceExtensionCount++] = "VK_EXT_mesh_shader";
         }
     }
     free(ExtensionProperties);
@@ -306,6 +311,18 @@ void InitCommand()
     }
 }
 
+void InitAllocator()
+{
+    VmaAllocatorCreateInfo CreateInfo = {0};
+    CreateInfo.device = VulkanState.Device;
+    CreateInfo.instance = VulkanState.Instance;
+    CreateInfo.physicalDevice = VulkanState.GPU;
+    CreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+    
+    VkResult Result = vmaCreateAllocator(&CreateInfo, &VulkanState.Allocator);
+    CheckVk(Result, "Failed to create VMA allocator!");
+}
+
 void InitVulkan()
 {
     InitInstance();
@@ -315,11 +332,14 @@ void InitVulkan()
     InitSwapchain();
     InitSync();
     InitCommand();
+    InitAllocator();
 }
 
 void ExitVulkan()
 {    
     vkDeviceWaitIdle(VulkanState.Device);
+    
+    vmaDestroyAllocator(VulkanState.Allocator);
     
     vkDestroyCommandPool(VulkanState.Device, VulkanState.ComputePool, NULL);
     vkDestroyCommandPool(VulkanState.Device, VulkanState.UploadPool, NULL);

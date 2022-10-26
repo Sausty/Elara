@@ -6,7 +6,6 @@
 ##
 
 SRC_DIR = src
-SRC     = *.c
 INCLUDE = -I$(VULKAN_SDK)/Include
 
 ifeq ($(OS),Windows_NT)
@@ -22,7 +21,7 @@ setup:
 	mkdir bin
 
 build:
-	clang $(SRC_DIR)/$(SRC) -o bin/Elara$(EXTENSION) $(INCLUDE) $(LIBS)
+	clang $(SRC_DIR)/*.c $(SRC_DIR)/*.cpp -o bin/Elara$(EXTENSION) $(INCLUDE) $(LIBS) -Wno-nullability-completeness
 
 clean:
 	rm -f bin/*.o

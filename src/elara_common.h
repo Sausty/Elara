@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <memory.h>
 
 typedef char i8;
 typedef uint8_t u8;

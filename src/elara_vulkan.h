@@ -10,13 +10,11 @@
 
 #include "elara_common.h"
 #include "elara_platform.h"
+#include "elara_vma.h"
 
 #include <vulkan/vulkan.h>
 
 #define FRAMES_IN_FLIGHT 2
-#define COMMAND_BUFFER_GRAPHICS 0
-#define COMMAND_BUFFER_COMPUTE 1
-#define COMMAND_BUFFER_UPLOAD 2
 
 typedef enum command_buffer_type {
     CommandBufferType_Graphics,
@@ -24,10 +22,23 @@ typedef enum command_buffer_type {
     CommandBufferType_Upload
 } command_buffer_type;
 
+typedef enum gpu_buffer_usage {
+    GpuBufferUsage_Vertex,
+    GpuBufferUsage_Index,
+    GpuBufferUsage_Uniform
+} gpu_buffer_usage;
+
 typedef struct command_buffer {
     VkCommandBuffer Handle;
     command_buffer_type CommandBufferType;
 } command_buffer;
+
+typedef struct gpu_buffer {
+    VkBuffer Buffer;
+    VmaAllocation Allocation;
+    VkBufferUsageFlagBits Usage;
+    VmaMemoryUsage MemoryUsage;
+} gpu_buffer;
 
 typedef struct vulkan_state {
     VkInstance Instance;
@@ -64,6 +75,8 @@ typedef struct vulkan_state {
     VkSemaphore AvailableSemaphore;
     VkSemaphore RenderedSemaphore;
     i32 ImageIndex;
+    
+    VmaAllocator Allocator;
 } vulkan_state;
 
 extern vulkan_state VulkanState;
@@ -84,6 +97,11 @@ void CommandBufferFree(command_buffer* CommandBuffer);
 void CommandBufferBegin(command_buffer* CommandBuffer);
 void CommandBufferEnd(command_buffer* CommandBuffer);
 void CommandBufferSubmit(command_buffer* CommandBuffer);
+
+// GPU buffer
+void BufferAllocate(gpu_buffer* Buffer, u64 Size, gpu_buffer_usage Usage);
+void BufferFree(gpu_buffer* Buffer);
+void BufferUpload(gpu_buffer* Buffer, const void* Data, u64 Size);
 
 // Defined in platform files
 void PlatformCreateSurface(VkInstance Instance, VkSurfaceKHR* Surface);
