@@ -7,6 +7,8 @@
 
 #include "elara_common.h"
 #include "elara_platform.h"
+#include "elara_vulkan.h"
+#include "elara_game.h"
 
 #if defined(ELARA_PLATFORM_LINUX)
 
@@ -25,6 +27,17 @@ typedef struct linux_state {
 
 linux_state LinuxState;
 platform_state PlatformState;
+
+void PlatformCreateSurface(VkInstance Instance, VkSurfaceKHR* Surface)
+{
+    VkXcbSurfaceCreateInfoKHR SurfaceCreateInfo = {0};
+    SurfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
+    SurfaceCreateInfo.connection = LinuxState.Connection;
+    SurfaceCreateInfo.window = LinuxState.Window;
+    
+    VkResult Result = vkCreateXcbSurfaceKHR(Instance, &SurfaceCreateInfo, NULL, Surface);
+    CheckVk(Result, "Failed to create XCB surface!");
+}
 
 void InitPlatform()
 {
@@ -129,6 +142,8 @@ int main(void)
             }
             }
         }
+        
+        ElaraUpdate();
     }
     ExitPlatform();
     return (0);

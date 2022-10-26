@@ -8,6 +8,7 @@
 #include "elara_common.h"
 #include "elara_platform.h"
 #include "elara_vulkan.h"
+#include "elara_game.h"
 
 #if defined(ELARA_PLATFORM_WINDOWS)
 
@@ -117,6 +118,8 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
             TranslateMessage(&Message);
             DispatchMessage(&Message);
         }
+        
+        ElaraUpdate();
     }
     
     ExitVulkan();

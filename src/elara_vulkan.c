@@ -299,6 +299,11 @@ void InitCommand()
     CommandPoolCreateInfo.queueFamilyIndex = VulkanState.ComputeFamily;
     Result = vkCreateCommandPool(VulkanState.Device, &CommandPoolCreateInfo, NULL, &VulkanState.ComputePool);
     CheckVk(Result, "Failed to create compute command pool!");
+    
+    for (int Frame = 0; Frame < FRAMES_IN_FLIGHT; Frame++)
+    {
+        CommandBufferInit(&VulkanState.SwapchainCommandBuffers[Frame], CommandBufferType_Graphics);
+    }
 }
 
 void InitVulkan()
@@ -320,7 +325,8 @@ void ExitVulkan()
     vkDestroyCommandPool(VulkanState.Device, VulkanState.UploadPool, NULL);
     vkDestroyCommandPool(VulkanState.Device, VulkanState.GraphicsPool, NULL);
     
-    for (u32 Frame = 0; Frame < FRAMES_IN_FLIGHT; Frame++) {
+    for (u32 Frame = 0; Frame < FRAMES_IN_FLIGHT; Frame++) 
+    {
         vkDestroyFence(VulkanState.Device, VulkanState.SwapchainFences[Frame], NULL);
         vkDestroyImageView(VulkanState.Device, VulkanState.SwapchainImageViews[Frame], NULL);
     }
@@ -335,8 +341,65 @@ void ExitVulkan()
     vkDestroyInstance(VulkanState.Instance, NULL);
 }
 
+void RenderBegin()
+{
+    vkAcquireNextImageKHR(VulkanState.Device, VulkanState.Swapchain, UINT32_MAX, VulkanState.AvailableSemaphore, VK_NULL_HANDLE, (u32*)&VulkanState.ImageIndex);
+    
+    command_buffer* Command = &VulkanState.SwapchainCommandBuffers[VulkanState.ImageIndex];
+    
+    vkWaitForFences(VulkanState.Device, 1, &VulkanState.SwapchainFences[VulkanState.ImageIndex], VK_TRUE, UINT32_MAX);
+    vkResetFences(VulkanState.Device, 1, &VulkanState.SwapchainFences[VulkanState.ImageIndex]);
+    vkResetCommandBuffer(Command->Handle, 0);
+    
+    CommandBufferBegin(Command);
+}
+
+void RenderEnd()
+{
+    command_buffer* Command = &VulkanState.SwapchainCommandBuffers[VulkanState.ImageIndex];
+    CommandBufferEnd(Command);
+    
+    VkSemaphore WaitSemaphores[] = { VulkanState.AvailableSemaphore };
+    VkSemaphore SignalSemaphores[] = { VulkanState.RenderedSemaphore };
+    VkPipelineStageFlags WaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+    
+    VkSubmitInfo SubmitInfo = {0};
+    SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    SubmitInfo.waitSemaphoreCount = 1;
+    SubmitInfo.pWaitSemaphores = WaitSemaphores;
+    SubmitInfo.pWaitDstStageMask = WaitStages;
+    SubmitInfo.commandBufferCount = 1;
+    SubmitInfo.pCommandBuffers = &Command->Handle;
+    SubmitInfo.signalSemaphoreCount = 1;
+    SubmitInfo.pSignalSemaphores = SignalSemaphores;
+    
+    vkResetFences(VulkanState.Device, 1, &VulkanState.SwapchainFences[VulkanState.ImageIndex]);
+    
+    VkResult Result = vkQueueSubmit(VulkanState.GraphicsQueue, 1, &SubmitInfo, VulkanState.SwapchainFences[VulkanState.ImageIndex]);
+    CheckVk(Result, "Failed to submit frame command buffers!");
+}
+
+void RenderPresent()
+{
+    VkSemaphore WaitSemaphores[] = { VulkanState.RenderedSemaphore };
+    VkSwapchainKHR Swapchains[] = { VulkanState.Swapchain };
+    
+    VkPresentInfoKHR PresentInfo = {0};
+    PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    PresentInfo.waitSemaphoreCount = 1;
+    PresentInfo.pWaitSemaphores = WaitSemaphores;
+    PresentInfo.swapchainCount = 1;
+    PresentInfo.pSwapchains = Swapchains;
+    PresentInfo.pImageIndices = (u32*)&VulkanState.ImageIndex;
+    
+    VkResult Result = vkQueuePresentKHR(VulkanState.GraphicsQueue, &PresentInfo);
+    CheckVk(Result, "Failed to present swapchain!");
+}
+
 void CheckVk(VkResult Result, const char* Message)
 {
     if (Result != VK_SUCCESS)
+    {
         printf("%s", Message);
+    }
 }
