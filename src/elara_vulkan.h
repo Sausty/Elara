@@ -33,12 +33,22 @@ typedef struct vulkan_state {
     u32 DeviceExtensionCount;
     VkQueue GraphicsQueue;
     VkQueue ComputeQueue;
+    VkCommandPool GraphicsPool;
+    VkCommandPool ComputePool;
+    VkCommandPool UploadPool;
     
     VkSwapchainKHR Swapchain;
     VkExtent2D SwapchainExtent;
     VkFormat SwapchainFormat;
     VkImage* SwapchainImages;
     VkImageView SwapchainImageViews[FRAMES_IN_FLIGHT];
+    
+    VkFence UploadFence;
+    VkFence ComputeFence;
+    VkFence SwapchainFences[FRAMES_IN_FLIGHT];
+    VkSemaphore AvailableSemaphore;
+    VkSemaphore RenderedSemaphore;
+    i32 ImageIndex;
 } vulkan_state;
 
 extern vulkan_state VulkanState;

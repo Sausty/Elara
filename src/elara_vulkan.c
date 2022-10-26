@@ -2,7 +2,7 @@
 ** EPITECH PROJECT 2022
 ** elara_vulkan.c
 ** File description:
-** Vulkan RHI for Elara
+** Contains all the boilerplate vulkan code (device, swapchain, sync etc)
 */
 
 #include "elara_vulkan.h"
@@ -255,6 +255,52 @@ void InitSwapchain()
     }
 }
 
+void InitSync()
+{
+    VkFenceCreateInfo FenceInfo = {0};
+    FenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    
+    VkResult Result = vkCreateFence(VulkanState.Device, &FenceInfo, NULL, &VulkanState.UploadFence);
+    CheckVk(Result, "Failed to create upload fence!");
+    
+    Result = vkCreateFence(VulkanState.Device, &FenceInfo, NULL, &VulkanState.ComputeFence);
+    CheckVk(Result, "Failed to create compute fence!");
+    
+    FenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    for (i32 Frame = 0; Frame < FRAMES_IN_FLIGHT; Frame++)
+    {
+        Result = vkCreateFence(VulkanState.Device, &FenceInfo, NULL, &VulkanState.SwapchainFences[Frame]);
+        CheckVk(Result, "Failed to create frame in flight fence!");
+    }
+    
+    VkSemaphoreCreateInfo SemaphoreInfo = {0};
+    SemaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+    
+    Result = vkCreateSemaphore(VulkanState.Device, &SemaphoreInfo, NULL, &VulkanState.AvailableSemaphore);
+    CheckVk(Result, "Failed to create image available semaphore!");
+    
+    Result = vkCreateSemaphore(VulkanState.Device, &SemaphoreInfo, NULL, &VulkanState.RenderedSemaphore);
+    CheckVk(Result, "Failed to create image rendered semaphore!");
+}
+
+void InitCommand()
+{
+    VkCommandPoolCreateInfo CommandPoolCreateInfo = {0};
+    CommandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    CommandPoolCreateInfo.queueFamilyIndex = VulkanState.GraphicsFamily;
+    CommandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    
+    VkResult Result = vkCreateCommandPool(VulkanState.Device, &CommandPoolCreateInfo, NULL, &VulkanState.GraphicsPool);
+    CheckVk(Result, "Failed to create graphics command pool!");
+    
+    Result = vkCreateCommandPool(VulkanState.Device, &CommandPoolCreateInfo, NULL, &VulkanState.UploadPool);
+    CheckVk(Result, "Failed to create upload command pool!");
+    
+    CommandPoolCreateInfo.queueFamilyIndex = VulkanState.ComputeFamily;
+    Result = vkCreateCommandPool(VulkanState.Device, &CommandPoolCreateInfo, NULL, &VulkanState.ComputePool);
+    CheckVk(Result, "Failed to create compute command pool!");
+}
+
 void InitVulkan()
 {
     InitInstance();
@@ -262,14 +308,27 @@ void InitVulkan()
     PlatformCreateSurface(VulkanState.Instance, &VulkanState.Surface);
     InitDevice();
     InitSwapchain();
+    InitSync();
+    InitCommand();
 }
 
 void ExitVulkan()
-{
+{    
+    vkDeviceWaitIdle(VulkanState.Device);
+    
+    vkDestroyCommandPool(VulkanState.Device, VulkanState.ComputePool, NULL);
+    vkDestroyCommandPool(VulkanState.Device, VulkanState.UploadPool, NULL);
+    vkDestroyCommandPool(VulkanState.Device, VulkanState.GraphicsPool, NULL);
+    
     for (u32 Frame = 0; Frame < FRAMES_IN_FLIGHT; Frame++) {
+        vkDestroyFence(VulkanState.Device, VulkanState.SwapchainFences[Frame], NULL);
         vkDestroyImageView(VulkanState.Device, VulkanState.SwapchainImageViews[Frame], NULL);
     }
     
+    vkDestroySemaphore(VulkanState.Device, VulkanState.RenderedSemaphore, NULL);
+    vkDestroySemaphore(VulkanState.Device, VulkanState.AvailableSemaphore, NULL);
+    vkDestroyFence(VulkanState.Device, VulkanState.UploadFence, NULL);
+    vkDestroyFence(VulkanState.Device, VulkanState.ComputeFence, NULL);
     vkDestroySwapchainKHR(VulkanState.Device, VulkanState.Swapchain, NULL);
     vkDestroyDevice(VulkanState.Device, NULL);
     vkDestroySurfaceKHR(VulkanState.Instance, VulkanState.Surface, NULL);
