@@ -5,7 +5,6 @@
 ** Vulkan header for Elara
 */
 
-// TODO(milo): Dynamic rendering
 // TODO(milo): Render graph
 // TODO(milo): Descriptor sets
 // TODO(milo): Pipelines
@@ -73,6 +72,19 @@ typedef struct gpu_image {
     u32 MipLevels;
 } gpu_image;
 
+typedef struct dynamic_rendering_info {
+    gpu_image* Images[32];
+    u32 ImageCount;
+    
+    u32 Width;
+    u32 Height;
+    b8 HasDepth;
+    b8 ReadDepth;
+    b8 ReadColor;
+    
+    f32 R, G, B, A;
+} dynamic_rendering_info;
+
 typedef struct vulkan_state {
     VkInstance Instance;
     char* Layers[64];
@@ -135,6 +147,8 @@ void CommandBufferSetViewport(command_buffer* CommandBuffer, i32 Width, i32 Heig
 void CommandBufferSetVertexBuffer(command_buffer* CommandBuffer, gpu_buffer* Buffer);
 void CommandBufferSetIndexBuffer(command_buffer* CommandBuffer, gpu_buffer* Buffer);
 void CommandBufferTransitionImageLayout(command_buffer* CommandBuffer, gpu_image* Image, u32 SrcA, u32 DstA, u32 SrcL, u32 DstL, u32 SrcS, u32 DstS, u32 Layer);
+void CommandBufferBeginDynamicRendering(command_buffer* CommandBuffer, dynamic_rendering_info* Info);
+void CommandBufferEndDynamicRendering(command_buffer* CommandBuffer);
 
 // GPU buffer
 void BufferAllocate(gpu_buffer* Buffer, u64 Size, gpu_buffer_usage Usage);

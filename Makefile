@@ -7,6 +7,7 @@
 
 SRC_DIR = src
 INCLUDE = -I$(VULKAN_SDK)/Include
+NAME = Elara
 
 ifeq ($(OS),Windows_NT)
 	LIBS = -L$(VULKAN_SDK)/Lib -lkernel32 -luser32 -lvulkan-1
@@ -15,17 +16,21 @@ else
 	LIBS = -L$(VULKAN_SDK)/Lib -L/usr/X11R6/lib -lX11 -lm -lX11-xcb -lxcb -lvulkan-1
 endif
 
-all: build
+all: $(NAME)
 
 setup:
 	mkdir bin
 
-build:
-	clang $(SRC_DIR)/*.c $(SRC_DIR)/*.cpp -o bin/Elara$(EXTENSION) $(INCLUDE) $(LIBS) -Wno-nullability-completeness
+$(NAME):
+	clang $(SRC_DIR)/*.c $(SRC_DIR)/*.cpp -o bin/$(NAME)$(EXTENSION) $(INCLUDE) $(LIBS) -Wno-nullability-completeness
 
 clean:
 	rm -f bin/*.o
-	rm -f bin/Elara$(EXTENSION)
+
+fclean: clean
+	rm -f bin/$(NAME)$(EXTENSION)
+
+re: clean all
 
 run:
-	bin/Elara$(EXTENSION)
+	bin/$(NAME)$(EXTENSION)

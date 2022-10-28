@@ -141,3 +141,74 @@ void CommandBufferTransitionImageLayout(command_buffer* CommandBuffer, gpu_image
     
     vkCmdPipelineBarrier(CommandBuffer->Handle, SrcS, DstS, 0, 0, NULL, 0, NULL, 1, &Barrier);
 }
+
+void CommandBufferBeginDynamicRendering(command_buffer* CommandBuffer, dynamic_rendering_info* Info)
+{
+    u32 ColorIterator = Info->HasDepth ? Info->ImageCount - 1 : Info->ImageCount;
+    
+    VkRect2D RenderArea = {0};
+    RenderArea.extent.width = (u32)Info->Width;
+    RenderArea.extent.height = (u32)Info->Height;
+    RenderArea.offset.x = 0;
+    RenderArea.offset.y = 0;
+    
+    VkRenderingInfo RenderingInfo = {0};
+    RenderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+    RenderingInfo.renderArea = RenderArea;
+    RenderingInfo.colorAttachmentCount = ColorIterator;
+    RenderingInfo.layerCount = 1;
+    
+    VkRenderingAttachmentInfo ColorAttachments[64] = {0};
+    
+    for (u32 Iterator = 0; Iterator < ColorIterator; Iterator++)
+    {
+        gpu_image* Image = Info->Images[Iterator];
+        
+        VkClearValue ClearValue = {0};
+        ClearValue.color.float32[0] = Info->R;
+        ClearValue.color.float32[1] = Info->G;
+        ClearValue.color.float32[2] = Info->B;
+        ClearValue.color.float32[3] = Info->A;
+        
+        VkRenderingAttachmentInfo ColorAttachmentInfo = {0};
+        ColorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        ColorAttachmentInfo.imageView = Image->ImageView;
+        ColorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        ColorAttachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
+        ColorAttachmentInfo.loadOp = Info->ReadColor ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
+        ColorAttachmentInfo.storeOp = Info->ReadColor ? VK_ATTACHMENT_STORE_OP_NONE : VK_ATTACHMENT_STORE_OP_STORE;
+        ColorAttachmentInfo.clearValue = ClearValue;
+        
+        ColorAttachments[Iterator] = ColorAttachmentInfo;
+    }
+    
+    if (Info->HasDepth)
+    {
+        gpu_image* Image = Info->Images[ColorIterator];
+        
+        VkClearValue ClearValue = {0};
+        ClearValue.depthStencil.depth = Info->ReadDepth ? 0.0f : 1.0f;
+        ClearValue.depthStencil.stencil = 0.0f;
+        
+        VkRenderingAttachmentInfo DepthAttachmentInfo = {0};
+        DepthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+        DepthAttachmentInfo.imageView = Image->ImageView;
+        DepthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+        DepthAttachmentInfo.resolveMode = VK_RESOLVE_MODE_NONE;
+        DepthAttachmentInfo.loadOp = Info->ReadDepth ? VK_ATTACHMENT_LOAD_OP_LOAD : VK_ATTACHMENT_LOAD_OP_CLEAR;
+        DepthAttachmentInfo.storeOp = Info->ReadDepth ? VK_ATTACHMENT_STORE_OP_DONT_CARE : VK_ATTACHMENT_STORE_OP_STORE;
+        DepthAttachmentInfo.clearValue = ClearValue;
+        
+        RenderingInfo.pStencilAttachment = &DepthAttachmentInfo;
+        RenderingInfo.pDepthAttachment = &DepthAttachmentInfo;
+    }
+    
+    RenderingInfo.pColorAttachments = ColorAttachments;
+    
+    vkCmdBeginRendering(CommandBuffer->Handle, &RenderingInfo);
+}
+
+void CommandBufferEndDynamicRendering(command_buffer* CommandBuffer)
+{
+    vkCmdEndRendering(CommandBuffer->Handle);
+}
