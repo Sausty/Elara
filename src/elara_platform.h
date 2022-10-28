@@ -25,4 +25,6 @@ extern platform_state PlatformState;
 void InitPlatform();
 void ExitPlatform();
 
+char* PlatformReadFile(const char* Path, u32* OutSize);
+
 #endif

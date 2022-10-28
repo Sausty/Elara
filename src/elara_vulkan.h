@@ -5,8 +5,9 @@
 ** Vulkan header for Elara
 */
 
-// TODO(milo): Pipelines
 // TODO(milo): Descriptor sets
+// TODO(milo): Hello triangle
+// TODO(milo): Hello cube
 // TODO(milo): Mesh loading
 // TODO(milo): Actual mesh shaders
 // TODO(milo): GPU driven culling
@@ -45,6 +46,11 @@ typedef enum gpu_image_usage {
     GpuImageUsage_Storage
 } gpu_image_usage;
 
+typedef enum gpu_pipeline_type {
+    GpuPipelineType_Graphics,
+    GpuPipelineType_Compute
+} gpu_pipeline_type;
+
 typedef struct command_buffer {
     VkCommandBuffer Handle;
     command_buffer_type CommandBufferType;
@@ -70,6 +76,45 @@ typedef struct gpu_image {
     gpu_image_usage Usage;
     u32 MipLevels;
 } gpu_image;
+
+typedef struct shader_module {
+    VkShaderModule Shader;
+    u32* ByteCode;
+    u32 ByteCodeSize;
+} shader_module;
+
+typedef struct pipeline_descriptor {
+    b8 UseMS;
+    b8 ReflectInputLayout;
+    b8 WindingOrderCCW;
+    
+    struct {
+        shader_module* Vertex;
+        shader_module* Fragment;
+        shader_module* Compute;
+        shader_module* Mesh;
+        shader_module* Task;
+        
+        u32 PushConstantSize;
+    } ShaderInfo;
+    
+    VkPrimitiveTopology PrimitiveTopology;
+    VkPolygonMode PolygonMode;
+    VkCullModeFlagBits CullMode;
+    VkFrontFace FrontFace;
+    VkCompareOp DepthCompare;
+    
+    i32 ColorAttachmentCounts;
+    VkFormat ColorFormats[32];
+    VkFormat DepthFormat;
+} pipeline_descriptor;
+
+typedef struct gpu_pipeline {
+    u32 PipelineType;
+    VkPipelineBindPoint BindPoint;
+    VkPipeline Pipeline;
+    VkPipelineLayout PipelineLayout;
+} gpu_pipeline;
 
 typedef struct dynamic_rendering_info {
     gpu_image* Images[32];
@@ -158,6 +203,15 @@ void BufferUpload(gpu_buffer* Buffer, const void* Data, u64 Size);
 void ImageAllocate(gpu_image* Image, u32 Width, u32 Height, VkFormat Format, gpu_image_usage Usage, u32 TargetLayout);
 void ImageFree(gpu_image* Image);
 u32 GetImageAspect(u32 Format);
+
+// Shader module
+void ShaderLoad(shader_module* Shader, const char* Path);
+void ShaderFree(shader_module* Shader);
+
+// Pipeline
+void PipelineInitGraphics(gpu_pipeline* Pipeline, pipeline_descriptor* Descriptor);
+void PipelineInitCompute(gpu_pipeline* Pipeline, pipeline_descriptor* Descriptor);
+void PipelineFree(gpu_pipeline* Pipeline);
 
 // Defined in platform files
 void PlatformCreateSurface(VkInstance Instance, VkSurfaceKHR* Surface);

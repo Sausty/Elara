@@ -55,6 +55,29 @@ void RefreshDimensions()
     PlatformState.Dimensions.Height = Rect.bottom - Rect.top;
 }
 
+char* PlatformReadFile(const char* Path, u32* OutSize)
+{
+    FILE* File = fopen(Path, "rb");
+    
+    if (!File)
+    {
+        assert(0);
+        return NULL;
+    }
+    
+    i32 CurrentPos = ftell(File);
+    fseek(File, 0, SEEK_END);
+    i32 Size = ftell(File);
+    fseek(File, CurrentPos, SEEK_SET);
+    
+    u32 FileSizePadded = (Size % 4 == 0 ? Size * 4 : (Size + 1) * 4) / 4;
+    char* Buffer = malloc(FileSizePadded);
+    fread(Buffer, Size, sizeof(char), File);
+    fclose(File);
+    *OutSize = (u32)Size;
+    return(Buffer);
+}
+
 void InitPlatform()
 {
     PlatformState.Dimensions.Width = 1280;
