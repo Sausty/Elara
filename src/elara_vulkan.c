@@ -168,9 +168,9 @@ void InitDevice()
             VulkanState.DeviceExtensions[VulkanState.DeviceExtensionCount++] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
         }
         
-        if (!strcmp("VK_EXT_mesh_shader", Property.extensionName))
+        if (!strcmp(VK_EXT_MESH_SHADER_EXTENSION_NAME, Property.extensionName))
         {
-            VulkanState.DeviceExtensions[VulkanState.DeviceExtensionCount++] = "VK_EXT_mesh_shader";
+            VulkanState.DeviceExtensions[VulkanState.DeviceExtensionCount++] = VK_EXT_MESH_SHADER_EXTENSION_NAME;
         }
     }
     free(ExtensionProperties);

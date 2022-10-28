@@ -5,6 +5,7 @@
 ** Vulkan header for Elara
 */
 
+// TODO(milo): Pipelines
 // TODO(milo): Descriptor sets
 // TODO(milo): Hello triangle
 // TODO(milo): Hello cube
@@ -15,6 +16,8 @@
 // TODO(milo): GPU driven LOD selection
 // TODO(milo): Multi draw indirect
 // TODO(milo): PBR
+// TODO(milo): Cleanup and optimizations
+// TODO(milo): Comment code
 
 #ifndef ELARA_VULKAN_H
 #define ELARA_VULKAN_H
