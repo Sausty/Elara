@@ -10,12 +10,12 @@
 VkBufferUsageFlagBits TypeToUsage(gpu_buffer_usage Usage)
 {
     if (Usage == GpuBufferUsage_Vertex)
-        return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        return(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
     if (Usage == GpuBufferUsage_Index)
-        return VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        return(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
     if (Usage == GpuBufferUsage_Uniform)
-        return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        return(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+    return(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 }
 
 u32 GetMemoryUsage(VkBufferUsageFlagBits Flags)
@@ -25,11 +25,11 @@ u32 GetMemoryUsage(VkBufferUsageFlagBits Flags)
     VkBufferUsageFlagBits Uniform = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
     
     if (Flags == Vertex)
-        return VMA_MEMORY_USAGE_CPU_TO_GPU;
+        return(VMA_MEMORY_USAGE_CPU_TO_GPU);
     if (Flags == Index)
-        return VMA_MEMORY_USAGE_CPU_TO_GPU;
+        return(VMA_MEMORY_USAGE_CPU_TO_GPU);
     if (Flags == Uniform)
-        return VMA_MEMORY_USAGE_CPU_ONLY;
+        return(VMA_MEMORY_USAGE_CPU_ONLY);
     return 0;
 }
 

@@ -10,12 +10,12 @@
 VkCommandPool GetCommandPoolFromType(command_buffer_type Type)
 {
     if (Type == CommandBufferType_Graphics)
-        return VulkanState.GraphicsPool;
+        return(VulkanState.GraphicsPool);
     if (Type == CommandBufferType_Compute)
-        return VulkanState.ComputePool;
+        return(VulkanState.ComputePool);
     if (Type == CommandBufferType_Upload)
-        return VulkanState.UploadPool;
-    return VulkanState.GraphicsPool;
+        return(VulkanState.UploadPool);
+    return(VulkanState.GraphicsPool);
 }
 
 void CommandBufferInit(command_buffer* CommandBuffer, command_buffer_type Type)
@@ -84,4 +84,60 @@ void CommandBufferSubmit(command_buffer* CommandBuffer)
             break;
         }
     }
+}
+
+void CommandBufferSetViewport(command_buffer* CommandBuffer, i32 Width, i32 Height)
+{
+    VkViewport Viewport = {0};
+    Viewport.width = Width;
+    Viewport.height = Height;
+    Viewport.x = 0.0f;
+    Viewport.y = 0.0f;
+    Viewport.minDepth = 0.0f;
+    Viewport.maxDepth = 1.0f;
+    
+    VkRect2D Scissor = {0};
+    Scissor.offset.x = 0;
+    Scissor.offset.y = 0;
+    Scissor.extent.width = Width;
+    Scissor.extent.height = Height;
+    
+    vkCmdSetViewport(CommandBuffer->Handle, 0, 1, &Viewport);
+    vkCmdSetScissor(CommandBuffer->Handle, 0, 1, &Scissor);
+}
+
+void CommandBufferSetVertexBuffer(command_buffer* CommandBuffer, gpu_buffer* Buffer)
+{
+    VkBuffer Buffers[] = { Buffer->Buffer };
+    VkDeviceSize Offsets[] = { 0 };
+    
+    vkCmdBindVertexBuffers(CommandBuffer->Handle, 0, 1, Buffers, Offsets);
+}
+
+void CommandBufferSetIndexBuffer(command_buffer* CommandBuffer, gpu_buffer* Buffer)
+{	
+    vkCmdBindIndexBuffer(CommandBuffer->Handle, Buffer->Buffer, 0, VK_INDEX_TYPE_UINT32);
+}
+
+void CommandBufferTransitionImageLayout(command_buffer* CommandBuffer, gpu_image* Image, u32 SrcA, u32 DstA, u32 SrcL, u32 DstL, u32 SrcS, u32 DstS, u32 Layer)
+{
+    VkImageSubresourceRange Range = { 0 };
+    Range.baseMipLevel = 0;
+    Range.levelCount = Image->MipLevels == 1 ? VK_REMAINING_MIP_LEVELS : Image->MipLevels;
+    Range.baseArrayLayer = Layer;
+    Range.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    Range.aspectMask = (VkImageAspectFlagBits)GetImageAspect(Image->Format);
+    
+    VkImageMemoryBarrier Barrier = { 0 };
+    Barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    Barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    Barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    Barrier.srcAccessMask = SrcA;
+    Barrier.dstAccessMask = DstA;
+    Barrier.oldLayout = SrcL;
+    Barrier.newLayout = DstL;
+    Barrier.image = Image->Image;
+    Barrier.subresourceRange = Range;
+    
+    vkCmdPipelineBarrier(CommandBuffer->Handle, SrcS, DstS, 0, 0, NULL, 0, NULL, 1, &Barrier);
 }

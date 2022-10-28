@@ -5,6 +5,18 @@
 ** Vulkan header for Elara
 */
 
+// TODO(milo): Dynamic rendering
+// TODO(milo): Render graph
+// TODO(milo): Descriptor sets
+// TODO(milo): Pipelines
+// TODO(milo): Mesh loading
+// TODO(milo): Actual mesh shaders
+// TODO(milo): GPU driven culling
+// TODO(milo): LOD loading
+// TODO(milo): GPU driven LOD selection
+// TODO(milo): Multi draw indirect
+// TODO(milo): PBR
+
 #ifndef ELARA_VULKAN_H
 #define ELARA_VULKAN_H
 
@@ -28,6 +40,13 @@ typedef enum gpu_buffer_usage {
     GpuBufferUsage_Uniform
 } gpu_buffer_usage;
 
+typedef enum gpu_image_usage {
+    GpuImageUsage_RTV,
+    GpuImageUsage_GBuffer,
+    GpuImageUsage_Depth,
+    GpuImageUsage_Storage
+} gpu_image_usage;
+
 typedef struct command_buffer {
     VkCommandBuffer Handle;
     command_buffer_type CommandBufferType;
@@ -39,6 +58,20 @@ typedef struct gpu_buffer {
     VkBufferUsageFlagBits Usage;
     VmaMemoryUsage MemoryUsage;
 } gpu_buffer;
+
+typedef struct gpu_image {
+    VkImage Image;
+    VkImageView ImageView;
+    VkFormat Format;
+    VkExtent2D Extent;
+    VkImageLayout Layout;
+    
+    VmaAllocation Allocation;
+    
+    u32 Width, Height;
+    gpu_image_usage Usage;
+    u32 MipLevels;
+} gpu_image;
 
 typedef struct vulkan_state {
     VkInstance Instance;
@@ -67,6 +100,7 @@ typedef struct vulkan_state {
     VkFormat SwapchainFormat;
     VkImage* SwapchainImages;
     VkImageView SwapchainImageViews[FRAMES_IN_FLIGHT];
+    gpu_image SwapchainImageHandles[FRAMES_IN_FLIGHT];
     command_buffer SwapchainCommandBuffers[FRAMES_IN_FLIGHT];
     
     VkFence UploadFence;
@@ -97,11 +131,20 @@ void CommandBufferFree(command_buffer* CommandBuffer);
 void CommandBufferBegin(command_buffer* CommandBuffer);
 void CommandBufferEnd(command_buffer* CommandBuffer);
 void CommandBufferSubmit(command_buffer* CommandBuffer);
+void CommandBufferSetViewport(command_buffer* CommandBuffer, i32 Width, i32 Height);
+void CommandBufferSetVertexBuffer(command_buffer* CommandBuffer, gpu_buffer* Buffer);
+void CommandBufferSetIndexBuffer(command_buffer* CommandBuffer, gpu_buffer* Buffer);
+void CommandBufferTransitionImageLayout(command_buffer* CommandBuffer, gpu_image* Image, u32 SrcA, u32 DstA, u32 SrcL, u32 DstL, u32 SrcS, u32 DstS, u32 Layer);
 
 // GPU buffer
 void BufferAllocate(gpu_buffer* Buffer, u64 Size, gpu_buffer_usage Usage);
 void BufferFree(gpu_buffer* Buffer);
 void BufferUpload(gpu_buffer* Buffer, const void* Data, u64 Size);
+
+// GPU image
+void ImageAllocate(gpu_image* Image, u32 Width, u32 Height, VkFormat Format, gpu_image_usage Usage, u32 TargetLayout);
+void ImageFree(gpu_image* Image);
+u32 GetImageAspect(u32 Format);
 
 // Defined in platform files
 void PlatformCreateSurface(VkInstance Instance, VkSurfaceKHR* Surface);

@@ -257,6 +257,13 @@ void InitSwapchain()
         
         Result = vkCreateImageView(VulkanState.Device, &IVCreateInfo, NULL, ImageView);
         CheckVk(Result, "Failed to create swapchain image view!");
+        
+        VulkanState.SwapchainImageHandles[ImageIterator].Extent = VulkanState.SwapchainExtent;
+        VulkanState.SwapchainImageHandles[ImageIterator].Format = VulkanState.SwapchainFormat;
+        VulkanState.SwapchainImageHandles[ImageIterator].Image = Image;
+        VulkanState.SwapchainImageHandles[ImageIterator].ImageView = VulkanState.SwapchainImageViews[ImageIterator];
+        VulkanState.SwapchainImageHandles[ImageIterator].Layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VulkanState.SwapchainImageHandles[ImageIterator].MipLevels = 1;
     }
 }
 
@@ -384,17 +391,22 @@ void RenderBegin()
     vkAcquireNextImageKHR(VulkanState.Device, VulkanState.Swapchain, UINT32_MAX, VulkanState.AvailableSemaphore, VK_NULL_HANDLE, (u32*)&VulkanState.ImageIndex);
     
     command_buffer* Command = &VulkanState.SwapchainCommandBuffers[VulkanState.ImageIndex];
+    gpu_image* SwapchainImage = &VulkanState.SwapchainImageHandles[VulkanState.ImageIndex];
     
     vkWaitForFences(VulkanState.Device, 1, &VulkanState.SwapchainFences[VulkanState.ImageIndex], VK_TRUE, UINT32_MAX);
     vkResetFences(VulkanState.Device, 1, &VulkanState.SwapchainFences[VulkanState.ImageIndex]);
     vkResetCommandBuffer(Command->Handle, 0);
     
     CommandBufferBegin(Command);
+    CommandBufferTransitionImageLayout(Command, SwapchainImage, 0, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0);
 }
 
 void RenderEnd()
 {
     command_buffer* Command = &VulkanState.SwapchainCommandBuffers[VulkanState.ImageIndex];
+    gpu_image* SwapchainImage = &VulkanState.SwapchainImageHandles[VulkanState.ImageIndex];
+    
+    CommandBufferTransitionImageLayout(Command, SwapchainImage, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, 0);
     CommandBufferEnd(Command);
     
     VkSemaphore WaitSemaphores[] = { VulkanState.AvailableSemaphore };
@@ -430,8 +442,7 @@ void RenderPresent()
     PresentInfo.pSwapchains = Swapchains;
     PresentInfo.pImageIndices = (u32*)&VulkanState.ImageIndex;
     
-    VkResult Result = vkQueuePresentKHR(VulkanState.GraphicsQueue, &PresentInfo);
-    CheckVk(Result, "Failed to present swapchain!");
+    vkQueuePresentKHR(VulkanState.GraphicsQueue, &PresentInfo);
 }
 
 void CheckVk(VkResult Result, const char* Message)
