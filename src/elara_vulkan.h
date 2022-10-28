@@ -5,9 +5,8 @@
 ** Vulkan header for Elara
 */
 
-// TODO(milo): Render graph
-// TODO(milo): Descriptor sets
 // TODO(milo): Pipelines
+// TODO(milo): Descriptor sets
 // TODO(milo): Mesh loading
 // TODO(milo): Actual mesh shaders
 // TODO(milo): GPU driven culling
