@@ -330,6 +330,26 @@ void InitAllocator()
     CheckVk(Result, "Failed to create VMA allocator!");
 }
 
+void InitPool()
+{
+    VkDescriptorPoolSize Sizes[] = {
+        { VK_DESCRIPTOR_TYPE_SAMPLER, 4096 },
+        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 4096 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 4096 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 4096 }
+    };
+    
+    VkDescriptorPoolCreateInfo CreateInfo = {0};
+    CreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    CreateInfo.pPoolSizes = Sizes;
+    CreateInfo.poolSizeCount = 4;
+    CreateInfo.maxSets = 2048;
+    CreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    
+    VkResult Result = vkCreateDescriptorPool(VulkanState.Device, &CreateInfo, NULL, &VulkanState.DescriptorPool);
+    CheckVk(Result, "Failed to create descriptor pool!");
+}
+
 void InitVulkan()
 {
     InitInstance();
@@ -340,6 +360,7 @@ void InitVulkan()
     InitSync();
     InitCommand();
     InitAllocator();
+    InitPool();
 }
 
 void ExitVulkan()
@@ -348,6 +369,7 @@ void ExitVulkan()
     
     vmaDestroyAllocator(VulkanState.Allocator);
     
+    vkDestroyDescriptorPool(VulkanState.Device, VulkanState.DescriptorPool, NULL);
     vkDestroyCommandPool(VulkanState.Device, VulkanState.ComputePool, NULL);
     vkDestroyCommandPool(VulkanState.Device, VulkanState.UploadPool, NULL);
     vkDestroyCommandPool(VulkanState.Device, VulkanState.GraphicsPool, NULL);

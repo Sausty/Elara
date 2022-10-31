@@ -6,7 +6,6 @@
 */
 
 // TODO(milo): Pipelines
-// TODO(milo): Descriptor sets
 // TODO(milo): Hello triangle
 // TODO(milo): Hello cube
 // TODO(milo): Mesh loading
@@ -30,6 +29,18 @@
 
 #define FRAMES_IN_FLIGHT 2
 
+typedef enum sampler_address_mode {
+    SamplerAddressMode_Repeat,
+    SamplerAddressMode_MirroredRepeat,
+    SamplerAddressMode_ClampToEdge,
+    SamplerAddressMode_ClampToBorder
+} sampler_address_mode;
+
+typedef enum sampler_filter {
+    SamplerFilter_Nearest,
+    SamplerFilter_Linear
+} sampler_filter;
+
 typedef enum command_buffer_type {
     CommandBufferType_Graphics,
     CommandBufferType_Compute,
@@ -48,6 +59,14 @@ typedef enum gpu_image_usage {
     GpuImageUsage_Depth,
     GpuImageUsage_Storage
 } gpu_image_usage;
+
+typedef enum gpu_descriptor_type {
+    GpuDescriptorType_Image,
+    GpuDescriptorType_SampledImage,
+    GpuDescriptorType_Sampler,
+    GpuDescriptorType_Buffer,
+    GpuDescriptorType_StorageImage
+} gpu_descriptor_type;
 
 typedef enum gpu_pipeline_type {
     GpuPipelineType_Graphics,
@@ -80,6 +99,23 @@ typedef struct gpu_image {
     u32 MipLevels;
 } gpu_image;
 
+typedef struct gpu_sampler {
+    sampler_filter Filter;
+    sampler_address_mode AddressMode;
+    VkSampler Sampler;
+} gpu_sampler;
+
+typedef struct gpu_descriptor_set_layout {
+    gpu_descriptor_type Descriptors[32];
+    u32 DescriptorCount;
+    
+    VkDescriptorSetLayout Layout;
+} gpu_descriptor_set_layout;
+
+typedef struct gpu_descriptor_set {
+    VkDescriptorSet Set;
+} gpu_descriptor_set;
+
 typedef struct shader_module {
     VkShaderModule Shader;
     u32* ByteCode;
@@ -99,6 +135,9 @@ typedef struct pipeline_descriptor {
         shader_module* Task;
         
         u32 PushConstantSize;
+        
+        gpu_descriptor_set_layout Layouts[16];
+        u32 SetLayoutCount;
     } ShaderInfo;
     
     VkPrimitiveTopology PrimitiveTopology;
@@ -170,6 +209,7 @@ typedef struct vulkan_state {
     i32 ImageIndex;
     
     VmaAllocator Allocator;
+    VkDescriptorPool DescriptorPool;
 } vulkan_state;
 
 extern vulkan_state VulkanState;
@@ -207,6 +247,24 @@ void ImageAllocate(gpu_image* Image, u32 Width, u32 Height, VkFormat Format, gpu
 void ImageFree(gpu_image* Image);
 u32 GetImageAspect(u32 Format);
 
+// GPU sampler
+void SamplerInit(gpu_sampler* Sampler, u32 Mips);
+void SamplerFree(gpu_sampler* Sampler);
+
+// Descriptor set layout
+void DescriptorSetLayoutInit(gpu_descriptor_set_layout* Layout);
+void DescriptorSetLayoutFree(gpu_descriptor_set_layout* Layout);
+
+// Descriptor set
+void DescriptorSetInit(gpu_descriptor_set* Set, gpu_descriptor_set_layout* Layout);
+void DescriptorSetFree(gpu_descriptor_set* Set);
+void DescriptorSetWriteSampler(gpu_descriptor_set* Set, gpu_sampler* Sampler, i32 Binding);
+void DescriptorSetWriteBuffer(gpu_descriptor_set* Set, gpu_buffer* Buffer, u64 Size, i32 Binding);
+void DescriptorSetWriteStorageBuffer(gpu_descriptor_set* Set, gpu_buffer* Buffer, u64 Size, i32 Binding);
+void DescriptorSetWriteImage(gpu_descriptor_set* Set, gpu_image* Image, i32 Binding);
+void DescriptorSetWriteImageSampler(gpu_descriptor_set* Set, gpu_image* Image, gpu_sampler* Sampler, i32 Binding);
+void DescriptorSetWriteStorageImage(gpu_descriptor_set* Set, gpu_image* Image, gpu_sampler* Sampler, i32 Binding);
+
 // Shader module
 void ShaderLoad(shader_module* Shader, const char* Path);
 void ShaderFree(shader_module* Shader);
@@ -219,4 +277,4 @@ void PipelineFree(gpu_pipeline* Pipeline);
 // Defined in platform files
 void PlatformCreateSurface(VkInstance Instance, VkSurfaceKHR* Surface);
 
-#endif //ELARA_VULKAN_H
+#endif //ELARA_VULKAN_H>>>>>>>>>>µµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµµ
