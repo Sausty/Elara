@@ -22,7 +22,7 @@ setup:
 	mkdir bin
 
 $(NAME):
-	clang $(SRC_DIR)/*.c $(SRC_DIR)/*.cpp -o bin/$(NAME)$(EXTENSION) $(INCLUDE) $(LIBS) -Wno-nullability-completeness -D_CRT_SECURE_NO_WARNINGS
+	clang $(SRC_DIR)/*.c $(SRC_DIR)/*.cpp -o bin/$(NAME)$(EXTENSION) $(INCLUDE) $(LIBS) -Wno-nullability-completeness -D_CRT_SECURE_NO_WARNINGS -Wno-switch
 
 clean:
 	rm -f bin/*.o

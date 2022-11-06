@@ -178,3 +178,142 @@ void DescriptorSetWriteSampler(gpu_descriptor_set* Set, gpu_sampler* Sampler, i3
     
     vkUpdateDescriptorSets(VulkanState.Device, 1, &WriteInfo, 0, NULL);
 }
+
+u32 GetAvailableDescriptor(gpu_descriptor_heap* Heap)
+{
+    for (i32 Descriptor = 0; Descriptor < Heap->Capacity; Descriptor++)
+    {
+        if (Heap->HeapHandle[Descriptor] == false)
+        {
+            Heap->HeapHandle[Descriptor] = true;
+            Heap->Length++;
+            return Descriptor;
+        }
+    }
+    
+    return 0;
+}
+
+void DescriptorHeapInit(gpu_descriptor_heap* Heap, gpu_descriptor_type Type, u32 Capacity)
+{
+    memset(Heap, 0, sizeof(gpu_descriptor_heap));
+    memset(Heap->HeapHandle, 0, sizeof(b8) * Capacity);
+    
+    VkDescriptorBindingFlags Flag = VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+    
+    VkDescriptorSetLayoutBinding Binding = {0};
+    Binding.binding = 0;
+    Binding.descriptorCount = 2048;
+    Binding.descriptorType = DescriptorTypeToVulkan(Type);
+    Binding.stageFlags = VK_SHADER_STAGE_ALL;
+    
+    VkDescriptorSetLayoutBindingFlagsCreateInfo BindingFlags = {0};
+    BindingFlags.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+    BindingFlags.bindingCount = 1;
+    BindingFlags.pBindingFlags = &Flag;
+    
+    VkDescriptorSetLayoutCreateInfo SetLayoutInfo = {0};
+    SetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    SetLayoutInfo.bindingCount = 1;
+    SetLayoutInfo.pBindings = &Binding;
+    SetLayoutInfo.pNext = &BindingFlags;
+    
+    VkResult Result = vkCreateDescriptorSetLayout(VulkanState.Device, &SetLayoutInfo, NULL, &Heap->Layout);
+    CheckVk(Result, "Failed to create descriptor heap layout!");
+    
+    Heap->HeapHandle = malloc(sizeof(b8) * Capacity);
+    Heap->Type = Type;
+    Heap->Length = 0;
+    Heap->Capacity = Capacity;
+    
+    VkDescriptorSetAllocateInfo AllocateInfo = {0};
+    AllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+    AllocateInfo.descriptorSetCount = 1;
+    AllocateInfo.descriptorPool = VulkanState.DescriptorPool;
+    AllocateInfo.pSetLayouts = &Heap->Layout;
+    
+    Result = vkAllocateDescriptorSets(VulkanState.Device, &AllocateInfo, &Heap->Descriptor);
+    CheckVk(Result, "Failed to allocate descriptor set for descriptor heap!");
+}
+
+void DescriptorHeapFree(gpu_descriptor_heap* Heap)
+{
+    vkFreeDescriptorSets(VulkanState.Device, VulkanState.DescriptorPool, 1, &Heap->Descriptor);
+    vkDestroyDescriptorSetLayout(VulkanState.Device, Heap->Layout, NULL);
+    free(Heap->HeapHandle);
+}
+
+u32 DescriptorHeapPushImage(gpu_descriptor_heap* Heap, gpu_image* Image)
+{
+    u32 Index = GetAvailableDescriptor(Heap);
+    
+    VkDescriptorImageInfo ImageInfo = {0};
+    ImageInfo.imageLayout = Image->Layout;
+    ImageInfo.imageView = Image->ImageView;
+    ImageInfo.sampler = VK_NULL_HANDLE;
+    
+    VkWriteDescriptorSet Write = {0};
+    Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    Write.descriptorCount = 1;
+    Write.descriptorType = DescriptorTypeToVulkan(Heap->Type);
+    Write.dstArrayElement = Index;
+    Write.dstBinding = 0;
+    Write.dstSet = Heap->Descriptor;
+    Write.pImageInfo = &ImageInfo;
+    
+    vkUpdateDescriptorSets(VulkanState.Device, 1, &Write, 0, NULL);
+    
+    return Index;
+}
+
+u32 DescriptorHeapPushSampler(gpu_descriptor_heap* Heap, gpu_sampler* Sampler)
+{
+    u32 Index = GetAvailableDescriptor(Heap);
+    
+    VkDescriptorImageInfo ImageInfo = {0};
+    ImageInfo.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    ImageInfo.imageView = VK_NULL_HANDLE;
+    ImageInfo.sampler = Sampler->Sampler;
+    
+    VkWriteDescriptorSet Write = {0};
+    Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    Write.descriptorCount = 1;
+    Write.descriptorType = DescriptorTypeToVulkan(Heap->Type);
+    Write.dstArrayElement = Index;
+    Write.dstBinding = 0;
+    Write.dstSet = Heap->Descriptor;
+    Write.pImageInfo = &ImageInfo;
+    
+    vkUpdateDescriptorSets(VulkanState.Device, 1, &Write, 0, NULL);
+    
+    return Index;
+}
+
+u32 DescriptorHeapPushBuffer(gpu_descriptor_heap* Heap, gpu_buffer* Buffer, u64 Size)
+{
+    u32 Index = GetAvailableDescriptor(Heap);
+    
+    VkDescriptorBufferInfo BufferInfo = {0};
+    BufferInfo.buffer = Buffer->Buffer;
+    BufferInfo.offset = 0;
+    BufferInfo.range = Size;
+    
+    VkWriteDescriptorSet Write = {0};
+    Write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    Write.descriptorCount = 1;
+    Write.descriptorType = DescriptorTypeToVulkan(Heap->Type);
+    Write.dstArrayElement = Index;
+    Write.dstBinding = 0;
+    Write.dstSet = Heap->Descriptor;
+    Write.pBufferInfo = &BufferInfo;
+    
+    vkUpdateDescriptorSets(VulkanState.Device, 1, &Write, 0, NULL);
+    
+    return Index;
+}
+
+void DescriptorHeapFreeDescriptor(gpu_descriptor_heap* Heap, u32 Index)
+{
+    Heap->HeapHandle[Index] = false;
+    Heap->Length--;
+}
