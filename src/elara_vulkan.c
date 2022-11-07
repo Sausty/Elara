@@ -159,10 +159,12 @@ void InitDevice()
     Features.multiDrawIndirect = 1;
     
     VkPhysicalDeviceDescriptorIndexingFeatures DIFeatures;
+    memset(&DIFeatures, 0, sizeof(DIFeatures));
     DIFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
     DIFeatures.descriptorBindingPartiallyBound = 1;
     
     VkPhysicalDeviceMeshShaderFeaturesEXT MSFeatures;
+    memset(&MSFeatures, 0, sizeof(MSFeatures));
     MSFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
     MSFeatures.taskShader = VK_TRUE;
     MSFeatures.meshShader = VK_TRUE;
@@ -170,6 +172,7 @@ void InitDevice()
     MSFeatures.pNext = &DIFeatures;
     
     VkPhysicalDeviceBufferDeviceAddressFeatures BDAFeatures;
+    memset(&BDAFeatures, 0, sizeof(BDAFeatures));
     BDAFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
     BDAFeatures.bufferDeviceAddress = VK_TRUE;
     BDAFeatures.bufferDeviceAddressCaptureReplay = VK_TRUE;
