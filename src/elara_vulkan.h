@@ -82,6 +82,7 @@ typedef struct gpu_buffer {
     VmaAllocation Allocation;
     VkBufferUsageFlagBits Usage;
     VmaMemoryUsage MemoryUsage;
+    u64 DeviceAddress;
 } gpu_buffer;
 
 typedef struct gpu_image {
@@ -187,6 +188,7 @@ typedef struct vulkan_state {
     u32 ExtensionCount;
     
     VkPhysicalDevice GPU;
+    VkPhysicalDeviceFeatures2 Features;
     u32 GraphicsFamily;
     u32 ComputeFamily;
     

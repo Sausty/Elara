@@ -5,9 +5,13 @@
 ## Makefile for the Elara project
 ##
 
-SRC_DIR = src
-INCLUDE = -I$(VULKAN_SDK)/Include
 NAME = Elara
+SRC_DIR = src
+SOURCES = $(SRC_DIR)/*.c $(SRC_DIR)/*.cpp
+OUTPUT = bin/$(NAME)$(EXTENSION)
+INCLUDE = -I$(VULKAN_SDK)/Include
+FLAGS = -Wno-nullability-completeness -Wno-switch -g -O0
+DEFINES = -D_CRT_SECURE_NO_WARNINGS
 
 ifeq ($(OS),Windows_NT)
 	LIBS = -L$(VULKAN_SDK)/Lib -lkernel32 -luser32 -lvulkan-1
@@ -22,7 +26,7 @@ setup:
 	mkdir bin
 
 $(NAME):
-	clang $(SRC_DIR)/*.c $(SRC_DIR)/*.cpp -o bin/$(NAME)$(EXTENSION) $(INCLUDE) $(LIBS) -Wno-nullability-completeness -D_CRT_SECURE_NO_WARNINGS -Wno-switch
+	clang $(SOURCES) -o $(OUTPUT) $(INCLUDE) $(LIBS) $(FLAGS) $(DEFINES)
 
 clean:
 	rm -f bin/*.o
@@ -30,7 +34,12 @@ clean:
 fclean: clean
 	rm -f bin/$(NAME)$(EXTENSION)
 
-re: clean all
+re: fclean all
 
 run:
 	bin/$(NAME)$(EXTENSION)
+
+build_shaders:
+	scripts/build_shaders.bat
+
+.PHONY: all, setup, $(NAME), clean, fclean, re, run, build_shaders

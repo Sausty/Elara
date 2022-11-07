@@ -10,19 +10,19 @@
 VkBufferUsageFlagBits TypeToUsage(gpu_buffer_usage Usage)
 {
     if (Usage == GpuBufferUsage_Vertex)
-        return(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        return(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
     if (Usage == GpuBufferUsage_Index)
-        return(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+        return(VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
     if (Usage == GpuBufferUsage_Uniform)
-        return(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+        return(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT);
     return(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 }
 
 u32 GetMemoryUsage(VkBufferUsageFlagBits Flags)
 {
-    VkBufferUsageFlagBits Vertex = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    VkBufferUsageFlagBits Index = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    VkBufferUsageFlagBits Uniform = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    VkBufferUsageFlagBits Vertex = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+    VkBufferUsageFlagBits Index = VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+    VkBufferUsageFlagBits Uniform = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
     
     if (Flags == Vertex)
         return(VMA_MEMORY_USAGE_CPU_TO_GPU);
@@ -48,6 +48,12 @@ void BufferAllocate(gpu_buffer* Buffer, u64 Size, gpu_buffer_usage Usage)
     
     VkResult Result = vmaCreateBuffer(VulkanState.Allocator, &BufferCreateInfo, &AllocationCreateInfo, &Buffer->Buffer, &Buffer->Allocation, NULL);
     CheckVk(Result, "Failed to allocate VMA buffer!");
+    
+    VkBufferDeviceAddressInfo AddressInfo = {0};
+    AddressInfo.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+    AddressInfo.buffer = Buffer->Buffer;
+    
+    Buffer->DeviceAddress = vkGetBufferDeviceAddress(VulkanState.Device, &AddressInfo);
 }
 
 void BufferFree(gpu_buffer* Buffer)

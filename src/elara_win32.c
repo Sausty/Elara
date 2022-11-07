@@ -138,6 +138,8 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
     WinState.Instance = Instance;
     InitPlatform();
     InitVulkan();
+    
+    ElaraInit();
 	
     while (!PlatformState.Quit)
     {
@@ -151,6 +153,8 @@ int CALLBACK WinMain(HINSTANCE Instance, HINSTANCE PrevInstance, LPSTR CommandLi
         ElaraUpdate();
     }
     
+    ElaraFree();
+   
     ExitVulkan();
     ExitPlatform();
     return (0);

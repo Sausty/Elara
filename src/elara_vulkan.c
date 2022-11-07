@@ -131,6 +131,9 @@ void InitPhysicalDevice()
         }
     }
     free(QueueFamilies);
+    
+    VulkanState.Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+	vkGetPhysicalDeviceFeatures2(VulkanState.GPU, &VulkanState.Features);
 }
 
 void InitDevice()
@@ -153,6 +156,27 @@ void InitDevice()
     Features.samplerAnisotropy = 1;
     Features.fillModeNonSolid = 1;
     Features.pipelineStatisticsQuery = 1;
+    Features.multiDrawIndirect = 1;
+    
+    VkPhysicalDeviceDescriptorIndexingFeatures DIFeatures;
+    DIFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    DIFeatures.descriptorBindingPartiallyBound = 1;
+    
+    VkPhysicalDeviceMeshShaderFeaturesEXT MSFeatures;
+    MSFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
+    MSFeatures.taskShader = VK_TRUE;
+    MSFeatures.meshShader = VK_TRUE;
+    MSFeatures.meshShaderQueries = VK_TRUE;
+    MSFeatures.pNext = &DIFeatures;
+    
+    VkPhysicalDeviceBufferDeviceAddressFeatures BDAFeatures;
+    BDAFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+    BDAFeatures.bufferDeviceAddress = VK_TRUE;
+    BDAFeatures.bufferDeviceAddressCaptureReplay = VK_TRUE;
+    BDAFeatures.pNext = &MSFeatures;
+    
+    VulkanState.Features.features = Features;
+    VulkanState.Features.pNext = &BDAFeatures;
     
     u32 ExtensionCount = 0;
     vkEnumerateDeviceExtensionProperties(VulkanState.GPU, NULL, &ExtensionCount, NULL);
@@ -172,6 +196,11 @@ void InitDevice()
         {
             VulkanState.DeviceExtensions[VulkanState.DeviceExtensionCount++] = VK_EXT_MESH_SHADER_EXTENSION_NAME;
         }
+        
+        if (!strcmp(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, Property.extensionName))
+        {
+            VulkanState.DeviceExtensions[VulkanState.DeviceExtensionCount++] = VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME;
+        }
     }
     free(ExtensionProperties);
     
@@ -183,6 +212,7 @@ void InitDevice()
     CreateInfo.pQueueCreateInfos = Queues;
     CreateInfo.enabledExtensionCount = VulkanState.DeviceExtensionCount;
     CreateInfo.ppEnabledExtensionNames = (const char* const*)VulkanState.DeviceExtensions;
+    CreateInfo.pNext = &VulkanState.Features;
     
     VkResult Result = vkCreateDevice(VulkanState.GPU, &CreateInfo, NULL, &VulkanState.Device);
     CheckVk(Result, "Failed to create vulkan device!");
@@ -325,6 +355,7 @@ void InitAllocator()
     CreateInfo.instance = VulkanState.Instance;
     CreateInfo.physicalDevice = VulkanState.GPU;
     CreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+    CreateInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
     
     VkResult Result = vmaCreateAllocator(&CreateInfo, &VulkanState.Allocator);
     CheckVk(Result, "Failed to create VMA allocator!");
@@ -352,6 +383,8 @@ void InitPool()
 
 void InitVulkan()
 {
+    memset(&VulkanState, 0, sizeof(vulkan_state));
+    
     InitInstance();
     InitPhysicalDevice();
     PlatformCreateSurface(VulkanState.Instance, &VulkanState.Surface);

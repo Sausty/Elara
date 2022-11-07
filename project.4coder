@@ -19,6 +19,7 @@ load_paths = {
 
 build = "make";
 run = "make run";
+build_shaders = "make build_shaders";
 
 command_list = {
 	{
@@ -30,8 +31,14 @@ command_list = {
 		.name = "run",
 		.out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = true,
 		.cmd = { {run, .os = "win"}, {run, .os = "linux"} }
+	},
+	{
+		.name = "build_shaders",
+		.out = "*compilation*", .footer_panel = true, .save_dirty_files = true, .cursor_at_end = true,
+		.cmd = { {build_shaders, .os = "win"}, {build_shaders, .os = "linux"} }
 	}
 };
 
 fkey_command[1] = "build";
+fkey_command[3] = "build_shaders";
 fkey_command[5] = "run";
